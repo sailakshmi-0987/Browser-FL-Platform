@@ -19,8 +19,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("model-update", (data) => {
+    console.log("Update received from:", data.clientId);
+    console.log("Accuracy:", data.accuracy);
+    console.log("Samples:", data.samples);
     updates.push(data);
-    console.log("Received update from", data.clientId);
   });
 
   socket.on("disconnect", () => {
