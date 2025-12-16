@@ -27,5 +27,10 @@ export async function trainLocalModel() {
     model,
     accuracy: acc,
     samples: 200,
+    weights: getModelWeights(model),
   };
 }
+export function getModelWeights(model: any) {
+  return model.getWeights().map((w: any) => w.arraySync());
+}
+
