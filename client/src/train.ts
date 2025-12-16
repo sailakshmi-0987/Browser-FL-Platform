@@ -31,6 +31,10 @@ export async function trainLocalModel() {
   };
 }
 export function getModelWeights(model: any) {
-  return model.getWeights().map((w: any) => w.arraySync());
+  return model.getWeights().map((w: any) => ({
+    data: w.arraySync(),
+    shape: w.shape,
+  }));
 }
+
 

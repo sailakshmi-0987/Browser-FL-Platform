@@ -1,34 +1,58 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
+import * as tf from "@tensorflow/tfjs";
+import { createModel } from "./model";
 import { trainLocalModel } from "./train";
 
 const socket = io("http://localhost:5000");
 
 function App() {
+  const modelRef = useRef<tf.LayersModel | null>(null);
+  const clientId = useRef(
+    "client_" + Math.floor(Math.random() * 10000)
+  );
+
   useEffect(() => {
-    const clientId = "client_" + Math.floor(Math.random() * 10000);
-    socket.emit("join", clientId);
+    socket.emit("join", clientId.current);
+
+    modelRef.current = createModel();
 
     async function trainAndSend() {
       const result = await trainLocalModel();
 
       socket.emit("model-update", {
-        clientId,
+        clientId: clientId.current,
         weights: result.weights,
         accuracy: result.accuracy,
         samples: result.samples,
       });
-
-      console.log("Model update sent to server");
     }
 
     trainAndSend();
+
+    socket.on("global-model", async (data) => {
+      console.log("Global model received");
+
+      const newWeights = data.weights.map(
+  (w: { data: number[]; shape: number[] }) =>
+    tf.tensor(w.data, w.shape)
+);
+;
+
+      modelRef.current?.setWeights(newWeights);
+
+      console.log("Global model applied. Ready for next round.");
+    });
+
+    return () => {
+      socket.off("global-model");
+    };
   }, []);
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Browser Federated Learning Client</h2>
-      <p>Training & sending updates…</p>
+      <p>Participating in federated rounds</p>
     </div>
   );
 }
