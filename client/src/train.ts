@@ -4,7 +4,6 @@ import { createModel } from "./model";
 export async function trainLocalModel() {
   const model = createModel();
 
-  // Dummy MNIST-like data
   const xs = tf.randomNormal([200, 784]);
   const labels = tf.oneHot(
     tf.randomUniform([200], 0, 10, "int32"),

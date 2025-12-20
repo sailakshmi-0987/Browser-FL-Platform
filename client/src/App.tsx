@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import * as tf from "@tensorflow/tfjs";
 import { createModel } from "./model";
 import { trainLocalModel } from "./train";
+import Landing from "./pages/Landing";
 
 const socket = io("http://localhost:5000");
 
@@ -49,12 +50,11 @@ function App() {
     };
   }, []);
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Browser Federated Learning Client</h2>
-      <p>Participating in federated rounds</p>
-    </div>
+
+  return(
+  <Landing />
   );
+
 }
 
 export default App;
