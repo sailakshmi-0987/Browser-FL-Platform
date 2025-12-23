@@ -1,48 +1,37 @@
 import { useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import * as tf from "@tensorflow/tfjs";
-import { createModel } from "./model";
-import { trainLocalModel } from "./train";
+import { createModel } from "./fl/model";
+import { trainLocalModel } from "./fl/train";
+import { socket } from "./socket/socket";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
-
-const socket = io("http://localhost:5000");
+import ClientDashboard from "./pages/ClientDashboard";
 
 function App() {
   const modelRef = useRef<tf.LayersModel | null>(null);
-  const clientId = useRef(
-    "client_" + Math.floor(Math.random() * 10000)
-  );
 
   useEffect(() => {
-    socket.emit("join", clientId.current);
-
     modelRef.current = createModel();
 
     async function trainAndSend() {
       const result = await trainLocalModel();
 
       socket.emit("model-update", {
-        clientId: clientId.current,
         weights: result.weights,
-        accuracy: result.accuracy,
         samples: result.samples,
+        accuracy: result.accuracy
       });
     }
 
     trainAndSend();
 
-    socket.on("global-model", async (data) => {
-      console.log("Global model received");
-
+    socket.on("global-model", (data) => {
       const newWeights = data.weights.map(
-  (w: { data: number[]; shape: number[] }) =>
-    tf.tensor(w.data, w.shape)
-);
-;
+        (w: { data: number[]; shape: number[] }) =>
+          tf.tensor(w.data, w.shape)
+      );
 
       modelRef.current?.setWeights(newWeights);
-
-      console.log("Global model applied. Ready for next round.");
     });
 
     return () => {
@@ -50,11 +39,14 @@ function App() {
     };
   }, []);
 
-
-  return(
-  <Landing />
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/dashboard" element={<ClientDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
-
 }
 
 export default App;

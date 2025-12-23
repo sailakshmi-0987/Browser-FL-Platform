@@ -13,27 +13,26 @@ export async function trainLocalModel() {
   const history = await model.fit(xs, labels, {
     epochs: 2,
     batchSize: 32,
-    verbose: 1,
   });
 
   const acc =
-  (history.history.acc?.slice(-1)[0] as number) ??
-  (history.history.accuracy?.slice(-1)[0] as number);
+    (history.history.accuracy?.slice(-1)[0] as number) ??
+    (history.history.acc?.slice(-1)[0] as number);
+
+  const weights = getModelWeights(model);
 
   console.log("Local training done. Accuracy:", acc);
 
   return {
-    model,
+    weights,
     accuracy: acc,
     samples: 200,
-    weights: getModelWeights(model),
   };
 }
-export function getModelWeights(model: any) {
-  return model.getWeights().map((w: any) => ({
+
+export function getModelWeights(model: tf.LayersModel) {
+  return model.getWeights().map((w) => ({
     data: w.arraySync(),
     shape: w.shape,
   }));
 }
-
-
